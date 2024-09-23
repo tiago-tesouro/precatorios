@@ -7,10 +7,10 @@ body <- paste0('{
   "size": 100,
   "query": {
     "match": {
-      "numeroProcesso":  "', lista_processos_ajuste$processo[3] ,'"
+      "numeroProcesso":  "', lista_processos_ajuste$processo[1] ,'"
       }
    }
 }')
 
-res <- VERB("POST", url = lista_processos_ajuste$Url[3], body = body, add_headers(headers))
+res <- VERB("POST", url = lista_processos_ajuste$Url[1], body = body, add_headers(headers))
 parsed <- jsonlite::fromJSON(content(res, 'text'))
