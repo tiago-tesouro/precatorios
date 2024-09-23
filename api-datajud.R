@@ -40,7 +40,7 @@ body <- '{
 # Para vários processos: 
 
 # Convert the list to a JSON array format
-process_values <- paste0('"', lista_processos, '"', collapse = ", ")
+process_values <- paste0('"', lista_processos_ajuste$processo[2], '"', collapse = ", ")
 # lista_processos veio de analise.R
 
 # Write the query body using the `terms` query
@@ -59,12 +59,62 @@ body <- paste0('{
 
 res <- VERB("POST", url = "https://api-publica.datajud.cnj.jus.br/api_publica_tjal/_search", body = body, add_headers(headers))
 
-cat(content(res, 'text'))
+write(content(res, 'text'), file = "result.json")
 
-t <- jsonlite::fromJSON(content(res, 'text'))
+json_response <- content(res, 'text')
 
-a <- t$hits$hits$`_source`
+parsed_json <- jsonlite::fromJSON(json_response)
+
+processa_json <- function(parsed_json) {
+  
+  nHits <- length(parsed_json$hits$hits)
+  
+  linha <- data.frame(1)
+  
+  if (nHits != 0) {
+    
+    processo <- parsed_json$hits$hits$`_source`
+    
+    linha$numeroProcesso <- processo$numeroProcesso
+    
+    linha$cod_classe <- processo$classe$codigo
+    linha$nome_classe <- processo$classe$nome
+    linha$grau <- processo$grau
+    linha$orgao_julgador_codigo <- processo$orgaoJulgador$codigo
+    linha$orgao_julgador_nome <- processo$orgaoJulgador$nome
+    
+    linha$tribunal <- processo$tribunal
+    linha$data_ultima_atualizacao <- processo$dataHoraUltimaAtualizacao
+    linha$data_ajuizamento <- processo$dataAjuizamento
+    
+    nAssuntos <- length(processo$assuntos)
+    for (i in 1:nAssuntos) {
+      
+      linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
+      linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+      
+    }
+    
+    assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
+    linha$assuntos <- paste(assuntos, collapse = ", ")
+    
+    nMovimentos <- nrow(processo$movimentos[[1]])
+    linha$qde_movimentos <- nMovimentos
+    if (nMovimentos > 0) {
+      linha$dataPrimeiroMovimento <- processo$movimentos[[1]]$dataHora[[1]]
+      linha$dataultimoMovimento <- processo$movimentos[[1]]$dataHora[[nMovimentos]]
+    }
+  
+    
+    return(linha)
+    
+  }
+  
+  
+}
+
 
 
 #https://api-publica.datajud.cnj.jus.br/api_publica_tjdft/_search
 
+a <- processa_json(parsed_json)
