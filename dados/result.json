@@ -1,0 +1,56 @@
+{
+    "took": 14,
+    "timed_out": false,
+    "_shards": {
+        "total": 1,
+        "successful": 1,
+        "skipped": 0,
+        "failed": 0
+    },
+    "hits": {
+        "total": {
+            "value": 1,
+            "relation": "eq"
+        },
+        "max_score": 12.879539,
+        "hits": [
+            {
+                "_index": "api_publica_tjac",
+                "_id": "TJAC_1114_G1_3624_00176617820068010001",
+                "_score": 12.879539,
+                "_source": {
+                    "numeroProcesso": "00176617820068010001",
+                    "classe": {
+                        "codigo": 1114,
+                        "nome": "Execução Contra a Fazenda Pública"
+                    },
+                    "sistema": {
+                        "codigo": -1,
+                        "nome": "Inválido"
+                    },
+                    "formato": {
+                        "codigo": 1,
+                        "nome": "Eletrônico"
+                    },
+                    "tribunal": "TJAC",
+                    "dataHoraUltimaAtualizacao": "2024-08-18T17:50:23.424Z",
+                    "grau": "G1",
+                    "@timestamp": "2024-09-18T11:45:15.049477487Z",
+                    "dataAjuizamento": "2006-11-20T00:00:00.000Z",
+                    "id": "TJAC_1114_G1_3624_00176617820068010001",
+                    "nivelSigilo": 0,
+                    "orgaoJulgador": {
+                        "codigo": 3624,
+                        "nome": "4ª Vara Cível de Rio Branco"
+                    },
+                    "assuntos": [
+                        {
+                            "codigo": 7757,
+                            "nome": "Auxílio-Doença Acidentário"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}
