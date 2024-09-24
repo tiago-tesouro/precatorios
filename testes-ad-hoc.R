@@ -18,9 +18,24 @@ parsed <- jsonlite::fromJSON(content(res, 'text'), simplifyVector = FALSE)
 
 
 lista_al <- lista_processos_ajuste %>% filter(Tribunal == "Tribunal de Justiça do Estado de Alagoas")
-
 lista_processos_api <- paste0('"', lista_al$processo, '"', collapse = ", ")
 
 tab <- busca_processo(lista_processos_api, lista_al$Url[1])
 
 #l <- processa_json(parsed$hits$hits[[1]]$`_source`)
+
+
+
+
+
+body <- paste0('{
+  "size": 100,
+  "query": {
+    "match": {
+      "numeroProcesso":  "', 138746520048170001 ,'"
+      }
+   }
+}')
+
+res <- VERB("POST", url = "https://api-publica.datajud.cnj.jus.br/api_publica_tjpe/_search", body = body, add_headers(headers))
+parsed <- jsonlite::fromJSON(content(res, 'text'), simplifyVector = FALSE)
