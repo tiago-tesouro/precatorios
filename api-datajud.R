@@ -1,29 +1,32 @@
 library(httr)
 library(tidyverse)
 
-#Substituir <API Key> pela Chave Pública
-headers <- c(
-  'Authorization' = 'ApiKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==',
-  'Content-Type' = 'application/json'
-)
 
-body <- '{
-  "size": 100,
-  "query": {
-        "bool": {
-            "must": [
-                {"match": {"assuntos.codigo":  10672}}
-            ]
-        }
-   }
-}';
+# Exploration -------------------------------------------------------------
 
-res <- VERB("POST", url = "https://api-publica.datajud.cnj.jus.br/api_publica_tjac/_search", body = body, add_headers(headers))
-
-cat(content(res, 'text'))
-
-t <- jsonlite::fromJSON(content(res, 'text'))
-a <- t$hits$hits
+# #Substituir <API Key> pela Chave Pública
+# headers <- c(
+#   'Authorization' = 'ApiKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==',
+#   'Content-Type' = 'application/json'
+# )
+# 
+# body <- '{
+#   "size": 100,
+#   "query": {
+#         "bool": {
+#             "must": [
+#                 {"match": {"assuntos.codigo":  10672}}
+#             ]
+#         }
+#    }
+# }';
+# 
+# res <- VERB("POST", url = "https://api-publica.datajud.cnj.jus.br/api_publica_tjac/_search", body = body, add_headers(headers))
+# 
+# cat(content(res, 'text'))
+# 
+# t <- jsonlite::fromJSON(content(res, 'text'))
+# a <- t$hits$hits
 
 # Para um processo:
 
@@ -68,43 +71,46 @@ body <- '{
 
 # PROCESSAMENTO -----------------------------------------------------------
 
-processa_json <- function(processo, linha, hit) {
+processa_json <- function(processo) {
   
   #nHits <- nrow(parsed_json$hits$hits)
   
   #print(paste0("Nhits: ", nHits))
   
   #if (nHits > 0) {
+  linha <- data.frame(numeroProcesso = c(NA))
   
-  linha$numeroProcesso <- processo$numeroProcesso[hit]
+  linha$numeroProcesso <- processo$numeroProcesso
   
-  linha$cod_classe <- processo$classe$codigo[hit]
-  linha$nome_classe <- processo$classe$nome[hit]
-  linha$grau <- processo$grau[hit]
-  linha$orgao_julgador_codigo <- processo$orgaoJulgador$codigo[hit]
-  linha$orgao_julgador_nome <- processo$orgaoJulgador$nome[hit]
+  linha$cod_classe <- processo$classe$codigo
   
-  linha$tribunal <- processo$tribunal[hit]
-  linha$data_ultima_atualizacao <- processo$dataHoraUltimaAtualizacao[hit]
-  linha$data_ajuizamento <- processo$dataAjuizamento[hit]
+  linha$nome_classe <- processo$classe$nome
+  linha$formato <- processo$formato$nome
+  linha$grau <- processo$grau
+  linha$orgao_julgador_codigo <- processo$orgaoJulgador$codigo
+  linha$orgao_julgador_nome <- processo$orgaoJulgador$nome
   
-  nAssuntos <- length(processo$assuntos[[hit]])
+  linha$tribunal <- processo$tribunal
+  linha$data_ultima_atualizacao <- processo$dataHoraUltimaAtualizacao
+  linha$data_ajuizamento <- processo$dataAjuizamento
+  
+  nAssuntos <- length(processo$assuntos)
   for (i in 1:nAssuntos) {
     
-    linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[hit]]$codigo[i]
-    linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[hit]]$nome[i]
+    linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
+    linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
     
   }
   
-  assuntos <- sapply(processo$assuntos[[hit]], function(x) x$nome)  # Extract all "nome" fields
+  assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
   linha$assuntos <- paste(assuntos, collapse = ", ")
   
-  nMovimentos <- nrow(processo$movimentos[[hit]])
+  nMovimentos <- length(processo$movimentos)
   
   if (!is.null(nMovimentos)) {
     linha$qde_movimentos <- nMovimentos
-    linha$dataPrimeiroMovimento <- processo$movimentos[[hit]]$dataHora[[1]]
-    linha$dataultimoMovimento <- processo$movimentos[[hit]]$dataHora[[nMovimentos]]
+    linha$dataPrimeiroMovimento <- processo$movimentos[[1]]$dataHora
+    linha$dataultimoMovimento <- processo$movimentos[[nMovimentos]]$dataHora
   }
 
   
@@ -115,7 +121,7 @@ processa_json <- function(processo, linha, hit) {
   
 }
 
-busca_processo <- function(numero_processo, endpoint) {
+busca_processo <- function(numeros_processos, endpoint) {
   #numero_processo <- "21123234"
   #print(c(numero_processo))
   #print(linha)
@@ -125,14 +131,23 @@ busca_processo <- function(numero_processo, endpoint) {
     'Content-Type' = 'application/json'
   )
   
+  # body <- paste0('{
+  #   "size": 100,
+  #   "query": {
+  #     "match": {
+  #       "numeroProcesso": "', numero_processo, '"
+  #     }
+  #   }
+  # }')
+  
   body <- paste0('{
-  "size": 100,
-  "query": {
-    "match": {
-      "numeroProcesso": "', numero_processo, '"
+    "size": 1000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', numeros_processos, ']
+      }
     }
-  }
-}')
+  }')
   
   #print(body)
   #print(endpoint)
@@ -143,27 +158,27 @@ busca_processo <- function(numero_processo, endpoint) {
   
   #cat(json_response)
   
-  parsed_json <- jsonlite::fromJSON(json_response)
+  parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
   
-  nHits <- nrow(parsed_json$hits$hits)
+  nHits <- length(parsed_json$hits$hits)
+  
+  tabela <- data.frame()
   
   if (nHits > 0) {
     
-    tabela <- data.frame(numero_processo_pesquisa = rep(numero_processo, nHits))
-    
-    print(paste(numero_processo, endpoint, parsed_json$`_shards`$total, parsed_json$`_shards`$successful, nHits))
-    
-    processo <- parsed_json$hits$hits$`_source`
+    print(paste(parsed_json$`_shards`$total, parsed_json$`_shards`$successful, nHits))
     
     for (hit in 1:nHits) {
-      linha <- tabela[hit,]
       
-      tabela[hit,] <- processa_json(processo, linha, hit)
+      processo <- parsed_json$hits$hits[[hit]]$`_source`
+      linha <- processa_json(processo)
+      tabela <- bind_rows(tabela, linha)
+      
     }
     
   } else {
     
-    tabela <- data.frame(numero_processo_pesquisa = c(numero_processo))
+    print("Nada.")
     
   }
   
