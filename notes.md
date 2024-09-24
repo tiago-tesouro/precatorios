@@ -32,3 +32,8 @@ Processamento
 
 Ceará, campo assunto inexistente, tratado.
 Pernambuco, retornando sem hits.
+São Paulo também.
+
+Pernambuco é por causa do formato do código do processo. Estava como numérico, sem leading zeros. Tratado.
+
+
