@@ -95,15 +95,20 @@ processa_json <- function(processo) {
   linha$data_ajuizamento <- processo$dataAjuizamento
   
   nAssuntos <- length(processo$assuntos)
-  for (i in 1:nAssuntos) {
+  
+  if (!is.null(nAssuntos) & nAssuntos > 0) {
     
-    linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
-    linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+    for (i in 1:nAssuntos) {
+      
+      linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
+      linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+      
+    }
+    
+    assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
+    linha$assuntos <- paste(assuntos, collapse = ", ")
     
   }
-  
-  assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
-  linha$assuntos <- paste(assuntos, collapse = ", ")
   
   nMovimentos <- length(processo$movimentos)
   
@@ -141,7 +146,7 @@ busca_processo <- function(numeros_processos, endpoint) {
   # }')
   
   body <- paste0('{
-    "size": 1000,
+    "size": 10000,
     "query": {
       "terms": {
         "numeroProcesso": [', numeros_processos, ']
@@ -169,6 +174,8 @@ busca_processo <- function(numeros_processos, endpoint) {
     print(paste(parsed_json$`_shards`$total, parsed_json$`_shards`$successful, nHits))
     
     for (hit in 1:nHits) {
+      
+      print(hit)
       
       processo <- parsed_json$hits$hits[[hit]]$`_source`
       linha <- processa_json(processo)
