@@ -36,4 +36,4 @@ São Paulo também.
 
 Pernambuco é por causa do formato do código do processo. Estava como numérico, sem leading zeros. Tratado.
 
-
+SP é porque tem um /XXXX no final que precisa ser ignorado. Tratado. Mas agora tá dando um erro com os códigos de assuntos.

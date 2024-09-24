@@ -103,7 +103,7 @@ processa_json <- function(processo) {
       {
         for (i in 1:nAssuntos) {
           
-          linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
+          linha[1,paste0("cod_assunto",i)] <- as.character(processo$assuntos[[i]]$codigo)
           linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
           
         }
