@@ -27,10 +27,10 @@ processa_estado <- function(nome_tribunal, sigla) {
   
 }
 
-processa_estado_grande <- function(nome_tribunal, p1, p2, sigla) {
+processa_estado_sp <- function(p1, p2, sigla) {
   
-  lista_processos_estado <- lista_processos_ajuste %>% filter(Tribunal == nome_tribunal) %>% filter(row_number() <= p2 & row_number() > p1)
-  lista_processos_estado_string <- paste0('"', lista_processos_estado$processo, '"', collapse = ", ")
+  lista_processos_estado <- lista_processos_ajuste %>% filter(Tribunal == "Tribunal de Justiça do Estado de São Paulo") %>% filter(row_number() <= p2 & row_number() > p1)
+  lista_processos_estado_string <- paste0('"', lista_processos_estado$processo %>% str_sub(1,20), '"', collapse = ", ")
   tab <- busca_processo(lista_processos_estado_string, lista_processos_estado$Url[1])
   write_rds(tab, paste0("./processed/dados-", sigla, ".rds"))
   
@@ -179,8 +179,8 @@ write_rds(tab, paste0("./processed/dados-sc1.rds"))
 # SP ----------------------------------------------------------------------
 
 lista_sp <- lista_processos_ajuste %>% filter(Tribunal == "Tribunal de Justiça do Estado de São Paulo")
-lista_processos_api <- paste0('"', lista_pe$processo %>% str_pad(20, side = "left", pad = "0"), '"', collapse = ", ")
-tab <- busca_processo(lista_processos_api, lista_pe$Url[1])
+lista_processos_api <- paste0('"', lista_sp$processo %>% str_sub(1,20), '"', collapse = ", ")
+tab <- busca_processo(lista_processos_api, lista_sp$Url[1])
 write_rds(tab, "./processed/dados-al.rds")
 
 headers <- c(
@@ -192,16 +192,30 @@ body <- '{
   "size": 100,
   "query": {
     "match": {
-      "numeroProcesso":  "00138746520048170001"
+      "numeroProcesso":  "00053895120228260565"
       }
    }
 }';
 
-res <- VERB("POST", url = lista_pe$Url[1], body = body, add_headers(headers))
+body <- paste0('{
+    "size": 1000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    }
+  }')
+
+res <- VERB("POST", url = lista_sp$Url[1], body = body, add_headers(headers))
 json_response <- content(res, 'text')
 parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
 
 lista_processos_ajuste %>%
-  filter(Tribunal %in%)
+  filter(str_detect(Tribunal, "Pernambuco|São Paulo|Bahia")) %>%
+  group_by(Tribunal) %>%
+  slice_sample(n = 1) %>%
+  select(Tribunal, processo)
+
+processa_estado_sp(0, 1000, "sp1")
 
 
