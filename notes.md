@@ -27,3 +27,8 @@ Assuntos
 
 13506	Precatório
 
+
+Processamento
+
+Ceará, campo assunto inexistente, tratado.
+Pernambuco, retornando sem hits.
