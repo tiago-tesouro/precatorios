@@ -98,15 +98,29 @@ processa_json <- function(processo) {
   
   if (!is.null(nAssuntos) & nAssuntos > 0) {
     
-    for (i in 1:nAssuntos) {
+    tryCatch(
       
-      linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
-      linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+      {
+        for (i in 1:nAssuntos) {
+          
+          linha[1,paste0("cod_assunto",i)] <- processo$assuntos[[i]]$codigo
+          linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+          
+        }
+        
+        assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
+        linha$assuntos <- paste(assuntos, collapse = ", ")
+        
+        NA
+        
+      },
       
-    }
-    
-    assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
-    linha$assuntos <- paste(assuntos, collapse = ", ")
+      error = function(cond) {
+        print("Erro nos assuntos")
+        NA
+      }
+      
+    )
     
   }
   
