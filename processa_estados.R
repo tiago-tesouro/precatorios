@@ -220,8 +220,8 @@ parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
 
 tab_sp1 <- processa_parsed_json(parsed_json)
 
-
-hit_da_vez <- parsed_json$hits$hits[[342]]$`_source`
+# tentando um hit específico, para testar o erro
+hit_da_vez <- parsed_json$hits$hits[[910]]$`_source`
 
 linha_da_Vez <- processa_hit(hit_da_vez)
 

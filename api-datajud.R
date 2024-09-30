@@ -240,7 +240,8 @@ processa_hit <- function(processo) {
   
   linha$numeroProcesso <- processo$numeroProcesso
   
-  linha$cod_classe <- processo$classe$codigo
+  linha$cod_classe <- as.character(processo$classe$codigo)
+  print(paste("Processamento do hit ", class(linha$cod_classe)))
   
   linha$nome_classe <- processo$classe$nome
   linha$formato <- processo$formato$nome
@@ -262,8 +263,12 @@ processa_hit <- function(processo) {
         for (i in 1:nAssuntos) {
           
           linha[1,paste0("cod_assunto",i)] <- as.character(processo$assuntos[[i]]$codigo)
-          linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
-          
+          linha[1,paste0("nome_assunto",i)] <- ifelse(
+            is.null(processo$assuntos[[i]]$nome),
+            "NULL",
+            processo$assuntos[[i]]$nome
+          )
+            
         }
         
         assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
@@ -313,7 +318,8 @@ processa_parsed_json <- function(parsed_json) {
       print(hit)
       
       processo <- parsed_json$hits$hits[[hit]]$`_source`
-      linha <- processa_json(processo)
+      linha <- processa_hit(processo)#processa_json(processo)
+      print(class(linha$cod_classe))
       tabela <- bind_rows(tabela, linha)
       
     }
