@@ -188,14 +188,14 @@ headers <- c(
   'Content-Type' = 'application/json'
 )
 
-body <- '{
-  "size": 100,
-  "query": {
-    "match": {
-      "numeroProcesso":  "00053895120228260565"
-      }
-   }
-}';
+# body <- '{
+#   "size": 100,
+#   "query": {
+#     "match": {
+#       "numeroProcesso":  "00053895120228260565"
+#       }
+#    }
+# }';
 
 body <- paste0('{
     "size": 1000,
@@ -203,19 +203,35 @@ body <- paste0('{
       "terms": {
         "numeroProcesso": [', lista_processos_api, ']
       }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
     }
+   }
+   ]
   }')
 
 res <- VERB("POST", url = lista_sp$Url[1], body = body, add_headers(headers))
 json_response <- content(res, 'text')
+
 parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
 
-lista_processos_ajuste %>%
-  filter(str_detect(Tribunal, "Pernambuco|São Paulo|Bahia")) %>%
-  group_by(Tribunal) %>%
-  slice_sample(n = 1) %>%
-  select(Tribunal, processo)
+tab_sp1 <- processa_parsed_json(parsed_json)
 
-processa_estado_sp(0, 1000, "sp1")
+
+hit_da_vez <- parsed_json$hits$hits[[342]]$`_source`
+
+linha_da_Vez <- processa_hit(hit_da_vez)
+
+# # só para comparar o formato dos códigos dos processos (BA ok, PE e SP problemáticos)
+# lista_processos_ajuste %>%
+#   filter(str_detect(Tribunal, "Pernambuco|São Paulo|Bahia")) %>%
+#   group_by(Tribunal) %>%
+#   slice_sample(n = 1) %>%
+#   select(Tribunal, processo)
+# 
+# processa_estado_sp(0, 1000, "sp1")
 
 

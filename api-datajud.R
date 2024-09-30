@@ -207,21 +207,126 @@ busca_processo <- function(numeros_processos, endpoint) {
   
 }
 
-# # testando a funcao
-# a <- busca_processo(lista_processos_ajuste$processo[1], lista_processos_ajuste$Url[1])
+# # # testando a funcao
+# # a <- busca_processo(lista_processos_ajuste$processo[1], lista_processos_ajuste$Url[1])
+# 
+# 
+# params_lista_processos <- lista_processos_ajuste[1:10,] %>%
+#   select(numero_processo = processo,
+#          endpoint = Url)
+# 
+# results_list <- purrr::pmap(params_lista_processos, busca_processo)
+# 
+# 
+# 
+# 
+# #https://api-publica.datajud.cnj.jus.br/api_publica_tjdft/_search
+# 
+# a <- processa_json(parsed_json)
 
 
-params_lista_processos <- lista_processos_ajuste[1:10,] %>%
-  select(numero_processo = processo,
-         endpoint = Url)
+# processa hit ------------------------------------------------------------
 
-results_list <- purrr::pmap(params_lista_processos, busca_processo)
+#processo <- parsed_json$hits$hits[[hit]]$`_source`
 
+processa_hit <- function(processo) {
+  
+  #nHits <- nrow(parsed_json$hits$hits)
+  
+  #print(paste0("Nhits: ", nHits))
+  
+  #if (nHits > 0) {
+  linha <- data.frame(numeroProcesso = c(NA))
+  
+  linha$numeroProcesso <- processo$numeroProcesso
+  
+  linha$cod_classe <- processo$classe$codigo
+  
+  linha$nome_classe <- processo$classe$nome
+  linha$formato <- processo$formato$nome
+  linha$grau <- processo$grau
+  linha$orgao_julgador_codigo <- processo$orgaoJulgador$codigo
+  linha$orgao_julgador_nome <- processo$orgaoJulgador$nome
+  
+  linha$tribunal <- processo$tribunal
+  linha$data_ultima_atualizacao <- processo$dataHoraUltimaAtualizacao
+  linha$data_ajuizamento <- processo$dataAjuizamento
+  
+  nAssuntos <- length(processo$assuntos)
+  
+  if (!is.null(nAssuntos) & nAssuntos > 0) {
+    
+    tryCatch(
+      
+      {
+        for (i in 1:nAssuntos) {
+          
+          linha[1,paste0("cod_assunto",i)] <- as.character(processo$assuntos[[i]]$codigo)
+          linha[1,paste0("nome_assunto",i)] <- processo$assuntos[[i]]$nome
+          
+        }
+        
+        assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
+        linha$assuntos <- paste(assuntos, collapse = ", ")
+        
+        NA
+        
+      },
+      
+      error = function(cond) {
+        print("Erro nos assuntos")
+        NA
+      }
+      
+    )
+    
+  }
+  
+  nMovimentos <- length(processo$movimentos)
+  
+  if (!is.null(nMovimentos)) {
+    linha$qde_movimentos <- nMovimentos
+    linha$dataPrimeiroMovimento <- processo$movimentos[[1]]$dataHora
+    linha$dataultimoMovimento <- processo$movimentos[[nMovimentos]]$dataHora
+  }
+  
+  
+  return(linha)
+  
+  #}
+  
+  
+}
 
+processa_parsed_json <- function(parsed_json) {
+  
+  nHits <- length(parsed_json$hits$hits)
+  
+  tabela <- data.frame()
+  
+  if (nHits > 0) {
+    
+    print(paste(parsed_json$`_shards`$total, parsed_json$`_shards`$successful, nHits))
+    
+    for (hit in 1:nHits) {
+      
+      print(hit)
+      
+      processo <- parsed_json$hits$hits[[hit]]$`_source`
+      linha <- processa_json(processo)
+      tabela <- bind_rows(tabela, linha)
+      
+    }
+    
+  } else {
+    
+    print("Nada.")
+    
+  }
+  
+  return(tabela)
+  
+}
 
-
-#https://api-publica.datajud.cnj.jus.br/api_publica_tjdft/_search
-
-a <- processa_json(parsed_json)
 
 
