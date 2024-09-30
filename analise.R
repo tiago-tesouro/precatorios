@@ -2,9 +2,9 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 
-base_teto_raw <- read_excel("./dados/base-teto-2023.xlsx", sheet = "2023")
-
-base_teto_raw %>% select(CATEGORIA_RTN) %>% filter(stringr::str_detect(CATEGORIA_RTN, "recatório")) %>% unique()
+# base_teto_raw <- read_excel("./dados/base-teto-2023.xlsx", sheet = "2023")
+# 
+# base_teto_raw %>% select(CATEGORIA_RTN) %>% filter(stringr::str_detect(CATEGORIA_RTN, "recatório")) %>% unique()
 
 
 base_justicas_estaduais <- read_excel("./dados/Planilha_1841031_Relacao_PLOA_2025.xlsx", skip = 1)

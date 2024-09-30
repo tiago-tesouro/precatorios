@@ -181,7 +181,7 @@ write_rds(tab, paste0("./processed/dados-sc1.rds"))
 lista_sp <- lista_processos_ajuste %>% filter(Tribunal == "Tribunal de Justiça do Estado de São Paulo")
 lista_processos_api <- paste0('"', lista_sp$processo %>% str_sub(1,20), '"', collapse = ", ")
 tab <- busca_processo(lista_processos_api, lista_sp$Url[1])
-write_rds(tab, "./processed/dados-al.rds")
+#write_rds(tab, "./processed/dados-al.rds")
 
 headers <- c(
   'Authorization' = 'ApiKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==',
@@ -197,8 +197,28 @@ headers <- c(
 #    }
 # }';
 
+# # first query with sort, to get the timestamp
+# ver https://datajud-wiki.cnj.jus.br/api-publica/exemplos/exemplo3
+# esse query deu origem ao tab_sp1
+# body <- paste0('{
+#     "size": 1000,
+#     "query": {
+#       "terms": {
+#         "numeroProcesso": [', lista_processos_api, ']
+#       }
+#     },
+#   "sort": [
+#   {
+#    "@timestamp": {
+#    "order": "asc"
+#     }
+#    }
+#    ]
+#   }')
+
+# esses foram para o tab_sp2
 body <- paste0('{
-    "size": 1000,
+    "size": 5000,
     "query": {
       "terms": {
         "numeroProcesso": [', lista_processos_api, ']
@@ -210,15 +230,132 @@ body <- paste0('{
    "order": "asc"
     }
    }
-   ]
+   ],
+   "search_after": [ 1719623953316 ]
   }')
+
+# esses foram para o tab_sp3
+body <- paste0('{
+    "size": 5000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ],
+   "search_after": [ 1721396961355 ]
+  }')
+
+# esses foram para o tab_sp4
+body <- paste0('{
+    "size": 5000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ],
+   "search_after": [ 1721567313963 ]
+  }')
+
+# esses foram para o tab_sp5
+body <- paste0('{
+    "size": 5000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ],
+   "search_after": [ 1727407169931 ]
+  }')
+
+# esses foram para o tab_sp6
+body <- paste0('{
+    "size": 5000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ],
+   "search_after": [ 1727577657912 ]
+  }')
+
 
 res <- VERB("POST", url = lista_sp$Url[1], body = body, add_headers(headers))
 json_response <- content(res, 'text')
 
 parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
 
+#primeiros mil
 tab_sp1 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp2 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp3 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp4 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp5 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp6 <- processa_parsed_json(parsed_json)
+
+ultimo_timestamp_do_parsed_json <- as.character(parsed_json$hits$hits[[length(parsed_json$hits$hits)]]$sort[[1]])
+
+
+#Binding them all
+# Step 1: Get all object names in the environment
+all_objects <- ls()
+
+# Step 2: Filter for names that start with "tab"
+tab_objects <- all_objects[grepl("^tab_sp", all_objects)]
+
+# Step 3: Use mget to retrieve the data frames as a list
+tab_data_frames <- mget(tab_objects)
+
+# Step 4: Bind all the data frames into one
+tab_sp <- bind_rows(tab_data_frames)
+
+write_rds(tab_sp, "./processed/dados-sp.rds")
+
+
+
+
+
+
+# DEBUG -------------------------------------------------------------------
+
+
 
 # tentando um hit específico, para testar o erro
 hit_da_vez <- parsed_json$hits$hits[[910]]$`_source`

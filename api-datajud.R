@@ -241,7 +241,7 @@ processa_hit <- function(processo) {
   linha$numeroProcesso <- processo$numeroProcesso
   
   linha$cod_classe <- as.character(processo$classe$codigo)
-  print(paste("Processamento do hit ", class(linha$cod_classe)))
+  #print(paste("Processamento do hit ", class(linha$cod_classe)))
   
   linha$nome_classe <- processo$classe$nome
   linha$formato <- processo$formato$nome
@@ -319,7 +319,7 @@ processa_parsed_json <- function(parsed_json) {
       
       processo <- parsed_json$hits$hits[[hit]]$`_source`
       linha <- processa_hit(processo)#processa_json(processo)
-      print(class(linha$cod_classe))
+      #print(class(linha$cod_classe))
       tabela <- bind_rows(tabela, linha)
       
     }
