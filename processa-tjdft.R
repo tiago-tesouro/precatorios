@@ -193,3 +193,4 @@ processa_parsed_json <- function(parsed_json) {
 }
 
 tab_df <- processa_parsed_json((parsed_json))
+write_rds(tab_df, "./processed/dados-df.rds")
