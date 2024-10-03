@@ -229,6 +229,20 @@ busca_processo <- function(numeros_processos, endpoint) {
 
 #processo <- parsed_json$hits$hits[[hit]]$`_source`
 
+get_movement_date <- function(hit_content, target_code) {
+  
+  # Find the movement where the code matches the target code
+  
+  for (mov in hit_content$movimentos) {
+    if (mov$codigo == target_code) {
+      return (mov$dataHora)
+    }
+  }
+  
+  return (NA)
+  
+}
+
 processa_hit <- function(processo) {
   
   #nHits <- nrow(parsed_json$hits$hits)
@@ -268,7 +282,7 @@ processa_hit <- function(processo) {
             "NULL",
             processo$assuntos[[i]]$nome
           )
-            
+          
         }
         
         assuntos <- sapply(processo$assuntos, function(x) x$nome)  # Extract all "nome" fields
@@ -289,6 +303,9 @@ processa_hit <- function(processo) {
   
   nMovimentos <- length(processo$movimentos)
   
+  target_code <- 12457 #precatorios
+  linha$movimento_inscricao_precatorio <- get_movement_date(processo, target_code)
+  
   if (!is.null(nMovimentos)) {
     linha$qde_movimentos <- nMovimentos
     linha$dataPrimeiroMovimento <- processo$movimentos[[1]]$dataHora
@@ -299,7 +316,6 @@ processa_hit <- function(processo) {
   return(linha)
   
   #}
-  
   
 }
 
