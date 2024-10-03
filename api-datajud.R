@@ -192,7 +192,7 @@ busca_processo <- function(numeros_processos, endpoint) {
       print(hit)
       
       processo <- parsed_json$hits$hits[[hit]]$`_source`
-      linha <- processa_json(processo)
+      linha <- processa_hit(processo)
       tabela <- bind_rows(tabela, linha)
       
     }

@@ -64,7 +64,7 @@ processa_estado(lista_nomes_tribunais[23], "pr")
 processa_estado(lista_nomes_tribunais[24], "rs")
 processa_estado(lista_nomes_tribunais[25], "sc")
 #processa_estado(lista_nomes_tribunais[26], "sp") vazio
-processa_estado_grande(lista_nomes_tribunais[26], 0, 1000, "sp1")
+#processa_estado_grande(lista_nomes_tribunais[26], 0, 1000, "sp1")
 
 # PE ----------------------------------------------------------------------
 
@@ -200,21 +200,21 @@ headers <- c(
 # # first query with sort, to get the timestamp
 # ver https://datajud-wiki.cnj.jus.br/api-publica/exemplos/exemplo3
 # esse query deu origem ao tab_sp1
-# body <- paste0('{
-#     "size": 1000,
-#     "query": {
-#       "terms": {
-#         "numeroProcesso": [', lista_processos_api, ']
-#       }
-#     },
-#   "sort": [
-#   {
-#    "@timestamp": {
-#    "order": "asc"
-#     }
-#    }
-#    ]
-#   }')
+body <- paste0('{
+    "size": 1000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ]
+  }')
 
 # esses foram para o tab_sp2
 body <- paste0('{
@@ -231,7 +231,7 @@ body <- paste0('{
     }
    }
    ],
-   "search_after": [ 1719623953316 ]
+   "search_after": [ 1719623953327 ]
   }')
 
 # esses foram para o tab_sp3
@@ -249,7 +249,7 @@ body <- paste0('{
     }
    }
    ],
-   "search_after": [ 1721396961355 ]
+   "search_after": [ 1721397300240 ]
   }')
 
 # esses foram para o tab_sp4
@@ -267,7 +267,7 @@ body <- paste0('{
     }
    }
    ],
-   "search_after": [ 1721567313963 ]
+   "search_after": [ 1721568207615 ]
   }')
 
 # esses foram para o tab_sp5
@@ -285,7 +285,7 @@ body <- paste0('{
     }
    }
    ],
-   "search_after": [ 1727407169931 ]
+   "search_after": [ 1727417330846 ]
   }')
 
 # esses foram para o tab_sp6
@@ -303,7 +303,25 @@ body <- paste0('{
     }
    }
    ],
-   "search_after": [ 1727577657912 ]
+   "search_after": [ 1727584488188 ]
+  }')
+
+# esses foram para o tab_sp7
+body <- paste0('{
+    "size": 5000,
+    "query": {
+      "terms": {
+        "numeroProcesso": [', lista_processos_api, ']
+      }
+    },
+  "sort": [
+  {
+   "@timestamp": {
+   "order": "asc"
+    }
+   }
+   ],
+   "search_after": [ 1727927140324 ]
   }')
 
 
@@ -329,6 +347,9 @@ tab_sp5 <- processa_parsed_json(parsed_json)
 
 # proximos 5 mil, depois do search_after
 tab_sp6 <- processa_parsed_json(parsed_json)
+
+# proximos 5 mil, depois do search_after
+tab_sp7 <- processa_parsed_json(parsed_json)
 
 ultimo_timestamp_do_parsed_json <- as.character(parsed_json$hits$hits[[length(parsed_json$hits$hits)]]$sort[[1]])
 
