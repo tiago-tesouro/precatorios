@@ -10,6 +10,8 @@ df_list <- lapply(rds_files, readRDS)
 # Bind all the data frames together into one data frame
 super_tabela <- bind_rows(df_list)
 
+write_rds(super_tabela, file = "dados-api-todos-tribunais.rds")
+
 super_tabela %>% filter(!is.na(cod_assunto9))
 
 super_tabela_long_assuntos <- super_tabela %>%
