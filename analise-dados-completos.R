@@ -141,14 +141,22 @@ ggplot(dados_principais_assuntos, aes(x = dty, y = assunto, color = as.factor(a4
   labs(title = "Tempo até o processo se tornar precatório (em anos)", y = NULL, x = NULL) +
   theme_minimal()
 
-ggplot(dados_principais_assuntos, aes(x = as.Date(d1), y = assunto
+dados_beeswarm <- dados_principais_assuntos %>%
+  select(d1, dty, assunto, valor) %>%
+  group_by(assunto) %>%
+  mutate(valor_q75 = quantile(valor, 0.75)) %>%
+  ungroup()
+
+ggplot(dados_beeswarm, aes(x = as.Date(d1), y = assunto, color = valor > valor_q75
                                                              #, color = as.factor(a4)
                                                              )) + 
-  geom_quasirandom(alpha = 0.5) + 
+  geom_quasirandom() + 
   #colorspace::scale_color_discrete_sequential(palette = "Oranges") +
-  labs(title = "Data do processo originário", y = NULL, x = NULL) +
+  scale_color_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
+  labs(title = "Data do processo originário", subtitle = "25% valores maiores destacados", y = NULL, x = NULL) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
-  theme_minimal() 
+  theme_minimal() +
+  theme(legend.position = "none")
   #+ facet_wrap(~a4)
 
 ggplot(dados_principais_assuntos, aes(x = as.Date(d1), y = assunto, fill = assunto)) +
@@ -157,6 +165,61 @@ ggplot(dados_principais_assuntos, aes(x = as.Date(d1), y = assunto, fill = assun
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
   theme(legend.position = "none")
 
+ggplot(dados_principais_assuntos) + 
+  geom_histogram(aes(x = a1), binwidth = 1) + 
+  labs(x = NULL, y = NULL) +
+  facet_wrap(~assunto) +
+  theme_bw()
+
+
+sumario_ano_assunto <- dados_principais_assuntos %>%
+  count(assunto, a1) %>%
+  group_by(assunto) %>%
+  mutate(
+    media_n = mean(n),
+    mediana_n = median(n),
+    q75 = quantile(n, 0.75)) %>%
+  ungroup()
+
+ggplot(sumario_ano_assunto, aes(y = n, x = a1, fill = n > q75)) +
+  geom_col() +
+  colorspace::scale_fill_discrete_qualitative() +
+  facet_wrap(~assunto) +
+  theme_bw()
+
+sumario_ano_assunto_valor <- dados_principais_assuntos %>%
+  group_by(assunto, a1) %>%
+  summarize(valor = sum(valor)) %>%
+  ungroup() %>%
+  group_by(assunto) %>%
+  mutate(
+    media_v = mean(valor),
+    mediana_v = median(valor),
+    q75 = quantile(valor, 0.75)) %>%
+  ungroup()
+
+ggplot(sumario_ano_assunto_valor, aes(y = valor, x = a1, fill = valor > q75)) +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
+  scale_y_continuous(labels = scales::label_number(scale = 1/1e6, suffix = "mi")) +
+  facet_wrap(~assunto) +
+  labs(x = NULL, y = NULL, title = "Valor do estoque atual de precatõrios por ano da ação original", subtitle = "Destaque para os 25% maiores valores") +
+  theme_bw()
+
+ggplot(sumario_ano_assunto_valor, aes(y = valor, x = a1, fill = valor > q75)) +
+  geom_col() +
+  scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
+  scale_y_continuous(labels = scales::label_number(scale = 1/1e6, suffix = "mi")) +
+  facet_wrap(~assunto
+             #, scales = "free"
+             ) +
+  labs(x = NULL, y = NULL, title = "Valor do estoque atual de precatõrios por ano da ação original", subtitle = "Destaque para os 25% maiores valores") +
+  theme_bw()
+
+dados_principais_assuntos %>% count(a1) %>% .$n %>% quantile(0.75)
+
+ggplot(dados_principais_assuntos) +
+  geom_histogram(aes(x = a1), binwidth = 1, color = "white")
 
 dados_principais_assuntos %>% filter(a4 <2020)
 
