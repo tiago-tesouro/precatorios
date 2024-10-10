@@ -123,14 +123,25 @@ ggplot(matriz_anos, aes(x = a4, y = a1, fill = n)) +
   labs(y = "Ano da ação original", x = "Ano em que se tornou precatório") +
   theme_minimal() +
   facet_wrap(~assunto)
-  
+
+ggplot(
+  dados_principais_assuntos %>% count(Tribunal)
+) +
+  geom_col(aes(
+    x = n, y = reorder(Tribunal,n)
+  )) +
+  scale_x_continuous(labels = scales::label_number(big.mark = ".")) +
+  theme(
+    text = element_text(family = "Fira Code")
+  )
 
 ggplot(dados_principais_assuntos) +
   geom_histogram(aes(dty)) +
   facet_wrap(~assunto)
 
 ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal)) + geom_boxplot()
-ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_point(color = "steelblue", alpha = 0.2)
+ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_boxplot()
+ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_jitter(color = "steelblue", alpha = 0.2)
 
 ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal, size = valor, color = assunto)) +
   geom_jitter()
@@ -153,11 +164,15 @@ ggplot(dados_beeswarm, aes(x = as.Date(d1), y = assunto, color = valor > valor_q
   geom_quasirandom() + 
   #colorspace::scale_color_discrete_sequential(palette = "Oranges") +
   scale_color_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
-  labs(title = "Data do processo originário", subtitle = "25% valores maiores destacados", y = NULL, x = NULL) +
+  labs(title = "Precatórios por data do processo originário", subtitle = "Destaque para os 25% maiores valores", y = NULL, x = NULL) +
   scale_x_date(date_breaks = "2 years", date_labels = "%Y") +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(
+    legend.position = "none",
+    text = element_text(family = "Fira Code"))
   #+ facet_wrap(~a4)
+
+ggsave("./plots/precatorios-por-data-processo-beeswarm.png", bg = "white", height = 8, width = 15)
 
 ggplot(dados_principais_assuntos, aes(x = as.Date(d1), y = assunto, fill = assunto)) +
   geom_density_ridges(scale = 2, rel_min_height = 0.01) +
@@ -183,9 +198,18 @@ sumario_ano_assunto <- dados_principais_assuntos %>%
 
 ggplot(sumario_ano_assunto, aes(y = n, x = a1, fill = n > q75)) +
   geom_col() +
-  colorspace::scale_fill_discrete_qualitative() +
+  scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
+  labs(x = NULL, y = NULL, title = "Número de processos-autores por ano da ação original", subtitle = "Destaque para os 25% anos com mais processos") +
   facet_wrap(~assunto) +
-  theme_bw()
+  theme_bw() +
+  theme(
+    text = element_text(family = "Fira Code"),
+    legend.position = "none"
+  )
+
+ggsave("./plots/precatorios-qde-por-ano-histo.png", bg = "white", height = 8, width = 15)
+
+
 
 sumario_ano_assunto_valor <- dados_principais_assuntos %>%
   group_by(assunto, a1) %>%
@@ -201,10 +225,16 @@ sumario_ano_assunto_valor <- dados_principais_assuntos %>%
 ggplot(sumario_ano_assunto_valor, aes(y = valor, x = a1, fill = valor > q75)) +
   geom_col() +
   scale_fill_manual(values = c("TRUE" = "firebrick", "FALSE" = "steelblue")) +
-  scale_y_continuous(labels = scales::label_number(scale = 1/1e6, suffix = "mi")) +
+  scale_y_continuous(labels = scales::label_number(scale = 1/1e6, suffix = " mi")) +
   facet_wrap(~assunto) +
   labs(x = NULL, y = NULL, title = "Valor do estoque atual de precatõrios por ano da ação original", subtitle = "Destaque para os 25% maiores valores") +
-  theme_bw()
+  theme_bw() +
+  theme(
+    text = element_text(family = "Fira Code"),
+    legend.position = "none"
+  )
+
+ggsave("./plots/precatorios-valor-por-ano-histo.png", bg = "white", height = 8, width = 15)
 
 ggplot(sumario_ano_assunto_valor, aes(y = valor, x = a1, fill = valor > q75)) +
   geom_col() +
