@@ -125,26 +125,166 @@ ggplot(matriz_anos, aes(x = a4, y = a1, fill = n)) +
   facet_wrap(~assunto)
 
 ggplot(
-  dados_principais_assuntos %>% count(Tribunal)
-) +
-  geom_col(aes(
+  dados_principais_assuntos %>% count(Tribunal),
+  aes(
     x = n, y = reorder(Tribunal,n)
-  )) +
-  scale_x_continuous(labels = scales::label_number(big.mark = ".")) +
+  )
+) +
+  geom_col(fill = "goldenrod") +
+  geom_text(aes(label = format(n, big.mark = ".")), hjust = "left", size = 4, family = "Fira Code", nudge_x = 100) +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(big.mark = "."), expand = expansion(add = c(0,2000))) +
+  labs(title = "Processos por Tribunal") +
+  theme_minimal() +
   theme(
-    text = element_text(family = "Fira Code")
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor = element_blank()
   )
 
-ggplot(dados_principais_assuntos) +
-  geom_histogram(aes(dty)) +
-  facet_wrap(~assunto)
+ggsave("./plots/precatorios-por-tribunal.png", height = 14, width = 10, bg = "white")
 
-ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal)) + geom_boxplot()
-ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_boxplot()
-ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_jitter(color = "steelblue", alpha = 0.2)
+ggplot(
+  dados_principais_assuntos %>% group_by(Tribunal) %>% summarise(n = sum(valor)),
+  aes(
+    x = n, y = reorder(Tribunal,n)
+  )
+) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(
+    label =  scales::number(n, scale = 1e-6, big.mark = ".", decimal.mark = ",", accuracy = 0.1)),
+    hjust = "left", size = 4, family = "Fira Code", nudge_x = 10e6) +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(scale = 1e-6, big.mark = ".", decimal.mark = ","), expand = expansion(add = c(0,5e8))) +
+  labs(title = "Valores por Tribunal (R$ mi)") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor = element_blank()
+  )
 
-ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal, size = valor, color = assunto)) +
-  geom_jitter()
+ggsave("./plots/precatorios-por-tribunal-valores.png", height = 14, width = 10, bg = "white")
+
+
+ggplot(dados_principais_assuntos %>% 
+         group_by(Tribunal) %>% 
+         mutate(
+           mediana = median(valor),
+           media = mean(valor)) %>% 
+         ungroup(), 
+       aes(x = valor, y = reorder(Tribunal, media))) + 
+  geom_boxplot() +
+  geom_point(aes(x = media), color = "firebrick") +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(scale = 1e-3, big.mark = ".", decimal.mark = ",", suffix = " mil"),
+                     limits = c(0,1e6), breaks = seq(0, 1e6, by = 1e5)) +
+  labs(title = "Distribuição dos valores dos processos por Tribunal ", subtitle = "até R$ 1 milhão (existem 68 processos com valor superior)") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor.x = element_line(linetype = "dotted")
+  )
+
+ggsave("./plots/precatorios-distribuicao-por-tribunal-valores.png", height = 10, width = 16, bg = "white")
+
+
+
+ggplot(
+  dados_principais_assuntos %>% 
+    group_by(assunto) %>% 
+    summarise(n = sum(valor)) %>% 
+    ungroup() %>% 
+    mutate(assunto = factor(assunto, levels = rev(c(lista_assuntos, "Demais")))),
+  aes(
+    x = n, y = assunto
+  )
+) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(
+    label =  scales::number(n, scale = 1e-6, big.mark = ".", decimal.mark = ",", accuracy = 1)),
+    hjust = "left", size = 4, family = "Fira Code", nudge_x = 10e6) +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(scale = 1e-6, big.mark = ".", decimal.mark = ","), expand = expansion(add = c(0,5e8))) +
+  labs(title = "Valores por assunto (R$ mi)") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank()
+  )
+
+ggsave("./plots/precatorios-por-assuntos-valores.png", height = 6, width = 10, bg = "white")
+
+
+
+ggplot(
+  dados_principais_assuntos %>% 
+    count(assunto) %>%
+    mutate(assunto = factor(assunto, levels = rev(c(lista_assuntos, "Demais")))),
+  aes(
+    x = n, y = assunto
+  )
+) +
+  geom_col(fill = "goldenrod") +
+  geom_text(aes(
+    label =  scales::number(n, big.mark = ".", decimal.mark = ",", accuracy = 1)),
+    hjust = "left", size = 4, family = "Fira Code", nudge_x = 100) +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(big.mark = ".", decimal.mark = ","), expand = expansion(add = c(0,1000))) +
+  labs(title = "Quantidade de processos por assunto (R$ mi)") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank()
+  )
+
+ggsave("./plots/precatorios-por-assuntos-qde.png", height = 6, width = 10, bg = "white")
+
+
+ggplot(dados_principais_assuntos %>% 
+         group_by(assunto) %>% 
+         mutate(
+           mediana = median(valor),
+           media = mean(valor)) %>% 
+         ungroup(), 
+       aes(x = valor, y = reorder(assunto, media))) + 
+  geom_boxplot() +
+  geom_point(aes(x = media), color = "firebrick") +
+  labs(x = NULL, y = NULL) +
+  scale_x_continuous(labels = scales::label_number(scale = 1e-3, big.mark = ".", decimal.mark = ",", suffix = " mil"),
+                     limits = c(0,1e6), breaks = seq(0, 1e6, by = 1e5)) +
+  labs(title = "Distribuição dos valores dos processos por assunto", subtitle = "até R$ 1 milhão (existem 68 processos com valor superior)") +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Fira Code", size = 14),
+    panel.grid.minor.x = element_line(linetype = "dotted")
+  )
+
+ggsave("./plots/precatorios-distribuicao-por-assunto-valores.png", height = 10, width = 16, bg = "white")
+
+
+
+
+
+ggplot(dados_principais_assuntos) + 
+  geom_histogram(aes(x = valor), bins = 50) + 
+  labs(x = NULL, y = NULL) +
+  facet_wrap(~assunto) +
+  theme_bw()
+
+
+
+
+# ggplot(dados_principais_assuntos) +
+#   geom_histogram(aes(dty)) +
+#   facet_wrap(~assunto)
+# 
+# ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal)) + geom_boxplot()
+# ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_boxplot()
+# ggplot(dados_principais_assuntos, aes(x = valor, y = Tribunal)) + geom_jitter(color = "steelblue", alpha = 0.2)
+# 
+# ggplot(dados_principais_assuntos, aes(x = dty, y = Tribunal, size = valor, color = assunto)) +
+#   geom_jitter()
 
 ggplot(dados_principais_assuntos, aes(x = dty, y = assunto, color = as.factor(a4))) + 
   geom_quasirandom() + 
