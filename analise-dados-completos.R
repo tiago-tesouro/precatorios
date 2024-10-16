@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 library(readxl)
 library(extrafont)
 library(ggbeeswarm)
@@ -65,8 +66,8 @@ top_assuntos <- paretto %>%
   gather("key", "v", -assunto) %>%
   mutate(key = factor(key, levels = c("total_restante", "acum")))
 
-lista_assuntos <- top_assuntos <- paretto %>%
-  filter(row_number() <= 6) %>% .$assunto
+lista_assuntos <- top_assuntos %>%
+  filter(row_number() <= 6) %>% .$assunto %>% as.character()
   
 ggplot(top_assuntos, aes(x = v, fill = key, y = assunto)) + 
   geom_col(width = .5) +
@@ -193,6 +194,7 @@ ggplot(
     group_by(assunto) %>% 
     summarise(n = sum(valor)) %>% 
     ungroup() %>% 
+    arrange(desc(n)) %>%
     mutate(assunto = factor(assunto, levels = rev(c(lista_assuntos, "Demais")))),
   aes(
     x = n, y = assunto
