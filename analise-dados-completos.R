@@ -68,9 +68,12 @@ top_assuntos <- paretto %>%
 
 lista_assuntos <- top_assuntos %>%
   filter(row_number() <= 6) %>% .$assunto %>% as.character()
+
+total <- sum(dados_tempos$valor)
   
 ggplot(top_assuntos, aes(x = v, fill = key, y = assunto)) + 
   geom_col(width = .5) +
+  geom_text(aes(label = scales::percent(v / total, accuracy = 0.1))) +
   scale_fill_manual(values = c("acum" = "hotpink", "total_restante" = "gray"), labels = c("acum" = "Valor", "total_restante" = "Demais")) +
   scale_x_continuous(labels = scales::label_number(scale = 1/1e9, suffix = " tri")) +
   labs(x = NULL, y = NULL, title = "Valores acumulados dos principais assuntos") +
@@ -80,6 +83,8 @@ ggplot(top_assuntos, aes(x = v, fill = key, y = assunto)) +
     legend.position = "none",
     panel.grid.minor.x = element_blank()
   )
+
+top_assuntos %>% spread(key, v) %>% janitor::adorn_percentages()
 
 ggplot(principais_assuntos, aes(x = v, y = reorder(assunto, v))) + geom_col()
 
