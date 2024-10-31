@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 
-base_teto_raw <- read_excel("./dados/base-teto-2022.xlsx", sheet = "2022")
+base_teto_raw <- readxl::read_excel("./dados/base-teto-2022.xlsx", sheet = "2022")
 
 base_precatorios <- base_teto_raw %>%
   filter(ID_PROGRAMA_PT == "0901")
@@ -20,6 +20,9 @@ tbl_base_precatorio <- base_precatorios %>%
     )
   )
 
-tbl_base_precatorio %>% group_by(class) %>% summarise(dot = sum(DOTACAO_ATUALIZADA)) %>% arrange(desc(dot))
+tbl_base_precatorio %>% 
+  group_by(class) %>% 
+  summarise(loa = sum(DOTACAO_INICIAL), pag = sum(DESPESAS_PAGAS)) %>% 
+  janitor::adorn_totals()
 
 base_precatorios %>% group_by(UNIDADE_ORCAMENTARIA_DESCRICAO) %>% summarize(dot = sum(DOTACAO_INICIAL)) %>% arrange(desc(dot))
