@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 
-base_teto_raw <- readxl::read_excel("./dados/base-teto-2022.xlsx", sheet = "2022")
+base_teto_raw <- readxl::read_excel("./dados/base-teto-2023.xlsx", sheet = "2023")
 
 base_precatorios <- base_teto_raw %>%
   filter(ID_PROGRAMA_PT == "0901")
@@ -12,7 +12,7 @@ tbl_base_precatorio <- base_precatorios %>%
     class = ifelse(
       NO_GRUPO_DESPESA_NADE == "PESSOAL E ENCARGOS SOCIAIS", "Pessoal",
       ifelse(
-        UNIDADE_ORCAMENTARIA_CODIGO == "40904", "Benefícios Previdenciários", 
+        UNIDADE_ORCAMENTARIA_CODIGO %in% c("33904", "40904"), "Benefícios Previdenciários", 
         ifelse(
           UNIDADE_ORCAMENTARIA_CODIGO == "55901", "LOAS/RMV", "Demais"
         )
