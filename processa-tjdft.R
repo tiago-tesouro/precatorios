@@ -1,4 +1,8 @@
-
+library(tidyverse)
+library(readxl)
+library(stringr)
+library(httr)
+library(jsonlite)
 
 # Prepara lista de processos que serão pesquisados na API -----------------
 
@@ -7,7 +11,6 @@ base_tjdft <- read_excel("./dados/tjdft-Precatorios_Federais___Orcamento_2025.xl
 api_endpoint <- "https://api-publica.datajud.cnj.jus.br/api_publica_tjdft/_search"
 
 lista_processos_df <- base_tjdft %>%
-  select(Tribu)
   select(`Nome do Tribunal`, `Número da Ação Originária`) %>%
   mutate(
     processo = str_replace_all(`Número da Ação Originária`,
@@ -17,10 +20,12 @@ lista_processos_df <- base_tjdft %>%
   ) %>%
   distinct()
 
+# faz uma string com a lista dos processos, apenas números
+# vai ficar uma lista tipo: '"07158804220218070015", "07212835520228070015", "07188796520218070015"'
 lista_processos_df_string <- paste0('"', lista_processos_df$processo, '"', collapse = ", ")
 
 
-# API Call ----------------------------------------------------------------
+# chamada da API ----------------------------------------------------------------
 
 headers <- c(
   'Authorization' = 'ApiKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==',
@@ -31,7 +36,7 @@ body <- paste0('{
     "size": 10000,
     "query": {
       "terms": {
-        "numeroProcesso": [', lista_processos_df_string, ']
+        "numeroProcesso": [', lista_processos_df_string, '] 
       }
     }
   }')
@@ -42,14 +47,14 @@ json_response <- content(res, 'text')
 
 parsed_json <- jsonlite::fromJSON(json_response, simplifyVector = FALSE)
 
-hits <- parsed_json$hits$hits
+hits <- parsed_json$hits$hits # esses são os processos propriamente ditos
 
 # testando se em cada hit há algum movimento do tipo código ZZZ (inscrição em precatórios)
 
-# Define the target code
+# Define o código alvo
 target_code <- 12457
 
-# Filter the list based on whether any movement contains the target code
+# Filtra a lista pra ver se algum hit tem o código alvo
 filtered_hits <- keep(hits, function(obj) {
   any(map_lgl(obj$`_source`$movimentos, ~ .x$codigo == target_code))
 })
@@ -72,7 +77,7 @@ filtered_hits <- keep(hits, function(obj) {
 
 get_movement_date <- function(hit_content, target_code) {
   
-  # Find the movement where the code matches the target code
+  # extrai os dados do movimento que corresponde a um determinado tipo de movimento (definido por meio do "target_code")
 
   for (mov in hit_content$movimentos) {
     if (mov$codigo == target_code) {
